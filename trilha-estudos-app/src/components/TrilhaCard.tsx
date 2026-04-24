@@ -12,9 +12,21 @@ interface TrilhaCardProps {
   data: Trilha;
   onPress?: () => void;
   onDelete?: () => void;
+  onLongPress?: () => void;
 }
 
-export function TrilhaCard({ data, onPress, onDelete }: TrilhaCardProps) {
+const ICON_MAP: Record<string, string> = {
+  book: 'book',
+  code: 'code',
+  video: 'video',
+  music: 'music',
+  globe: 'globe',
+  cpu: 'cpu',
+  layers: 'layers',
+  zap: 'zap',
+};
+
+export function TrilhaCard({ data, onPress, onDelete, onLongPress }: TrilhaCardProps) {
   // Referência para controlar o estado do swipe
   const swipeableRef = useRef<any>(null);
 
@@ -22,6 +34,8 @@ export function TrilhaCard({ data, onPress, onDelete }: TrilhaCardProps) {
     swipeableRef.current?.close(); 
     if (onDelete) onDelete();      
   };
+
+  const iconName = (data.icone && ICON_MAP[data.icone]) || 'book';
 
   return (
     <ReanimatedSwipeable
@@ -36,9 +50,18 @@ export function TrilhaCard({ data, onPress, onDelete }: TrilhaCardProps) {
         <DeleteSwipeAction onDelete={triggerDelete} drag={drag} />
       )}
     >
-      <TouchableOpacity style={styles.card} activeOpacity={1} onPress={onPress}>
+      <TouchableOpacity 
+        style={styles.card} 
+        activeOpacity={0.8} 
+        onPress={onPress}
+        onLongPress={onLongPress}
+        delayLongPress={400}
+      >
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>{data.titulo}</Text>
+          <View style={styles.iconContainer}>
+            <Feather name={iconName as any} size={18} color={THEME.primary} />
+          </View>
+          <Text style={styles.cardTitle} numberOfLines={1}>{data.titulo}</Text>
           <Feather name="chevron-right" size={20} color={THEME.textSecondary} />
         </View>
         
@@ -66,9 +89,17 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 8,
+    gap: 12,
+  },
+  iconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0, 210, 135, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   cardTitle: { 
     fontSize: 18, 
@@ -80,5 +111,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: THEME.textSecondary,
     lineHeight: 20,
+    marginLeft: 48,
   }
 });

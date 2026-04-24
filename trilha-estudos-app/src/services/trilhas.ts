@@ -1,11 +1,23 @@
 import { api } from './api';
 import { Trilha } from '../types/models';
 
+export interface PaginatedResponse<T> {
+  data: T[];
+  meta: {
+    total: number;
+    page: number;
+    limit: number;
+    lastPage: number;
+  };
+}
+
 export const TrilhasService = {
-  getAll: async (): Promise<Trilha[]> => {
+  getAll: async (page: number = 1, limit: number = 10): Promise<PaginatedResponse<Trilha>> => {
     try {
-      const response = await api.get<{ data: Trilha[], meta: any }>('/trilhas');
-      return response.data.data;
+      const response = await api.get<PaginatedResponse<Trilha>>('/trilhas', {
+        params: { page, limit },
+      });
+      return response.data;
     } catch (error) {
       console.error("Erro ao buscar trilhas:", error);
       throw error; 
@@ -18,6 +30,26 @@ export const TrilhasService = {
       return response.data;
     } catch (error) {
       console.error(`Erro ao buscar a trilha ${id}:`, error);
+      throw error;
+    }
+  },
+
+  create: async (data: { titulo: string; descricao?: string; icone?: string }): Promise<Trilha> => {
+    try {
+      const response = await api.post<Trilha>('/trilhas', data);
+      return response.data;
+    } catch (error) {
+      console.error("Erro ao criar trilha:", error);
+      throw error;
+    }
+  },
+
+  update: async (id: number, data: { titulo?: string; descricao?: string; icone?: string }): Promise<Trilha> => {
+    try {
+      const response = await api.patch<Trilha>(`/trilhas/${id}`, data);
+      return response.data;
+    } catch (error) {
+      console.error(`Erro ao atualizar a trilha ${id}:`, error);
       throw error;
     }
   },
