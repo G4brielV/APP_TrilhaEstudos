@@ -150,7 +150,7 @@ export default function Home() {
         renderItem={({ item }) => (
           <TrilhaCard 
             data={item} 
-            onPress={() => router.push(`/(app)/trilhas/${item.id}` as any)}
+            onPress={() => router.push(`/(main)/trilhas/${item.id}` as any)}
             onDelete={() => handleExcluirTrilha(item.id, item.titulo)}
             onLongPress={() => handleOpenEdit(item)}
           />

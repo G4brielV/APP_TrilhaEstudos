@@ -13,7 +13,7 @@ export default function AppLayout() {
       }}
     >
       <Stack.Screen name="index" options={{ title: 'Início', headerShown: false }} />
-      <Stack.Screen name="trilhas/[id]" options={{ title: 'Detalhes da Trilha' }} />
+      <Stack.Screen name="[id]" options={{ title: 'Detalhes da Trilha' }} />
     </Stack>
   );
 }
