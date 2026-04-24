@@ -20,5 +20,14 @@ export const TrilhasService = {
       console.error(`Erro ao buscar a trilha ${id}:`, error);
       throw error;
     }
+  },
+  
+  delete: async (id: number): Promise<void> => {
+    try {
+      await api.delete(`/trilhas/${id}`);
+    } catch (error) {
+      console.error(`Erro ao deletar a trilha ${id}:`, error);
+      throw error;
+    }
   }
 };
