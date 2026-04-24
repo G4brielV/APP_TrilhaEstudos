@@ -1,0 +1,53 @@
+services:
+  # ── PostgreSQL Database ──────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: db_TrilhaEstudos
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 123
+      POSTGRES_DB: trilhaestudos
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d trilhaestudos"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── pgAdmin (optional) ──────────────────────────────────
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pgadmin-trilhaestudos
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # ── NestJS Backend ──────────────────────────────────────
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: backend_TrilhaEstudos
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://postgres:123@db:5432/trilhaestudos?schema=public"
+      JWT_SECRET: "trilha-estudos-jwt-secret-key-2026"
+      PORT: 3000
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
