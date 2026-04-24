@@ -1,7 +1,11 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, StatusBar, Alert } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { TrilhasService } from '../src/services/trilhas';
 import { Trilha } from '../src/types/models';
+import { THEME } from '../src/theme/colors';
+import { TrilhaCard } from '../src/components/TrilhaCard';
+import { AddButton } from '../src/components/AddButton';
 
 export default function Home() {
   const [trilhas, setTrilhas] = useState<Trilha[]>([]);
@@ -22,36 +26,90 @@ export default function Home() {
     }
   }
 
+
+  async function handleExcluirTrilha(id: number, titulo: string) {
+    Alert.alert(
+      "Excluir Trilha",
+      `Tem certeza que deseja apagar a trilha "${titulo}"?`,
+      [
+        { text: "Cancelar", style: "cancel" },
+        { 
+          text: "Apagar", 
+          style: "destructive", 
+          onPress: async () => {
+            try {
+              console.log('Swipe para remoção')
+              await TrilhasService.delete(id);
+              setTrilhas(trilhasAtuais => trilhasAtuais.filter(t => t.id !== id));
+            } catch (error) {
+              Alert.alert("Erro", "Não foi possível excluir a trilha no momento.");
+            }
+          }
+        }
+      ]
+    );
+  }
+
   if (loading) {
     return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0000ff" />
-        <Text>Carregando trilhas do NestJS...</Text>
+      <View style={[styles.center, { backgroundColor: THEME.background }]}>
+        <ActivityIndicator size="large" color={THEME.primary} />
+        <Text style={{ color: THEME.textSecondary, marginTop: 10 }}>Carregando trilhas...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Trilhas Disponíveis</Text>
+    <GestureHandlerRootView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={THEME.background} />
+      
+      <View style={styles.header}>
+        <Text style={styles.title}>Trilhas Disponíveis</Text>
+        <AddButton onPress={() => console.log('Clicou em Adicionar')} />
+      </View>
+
       <FlatList
         data={trilhas}
         keyExtractor={(item) => String(item.id)}
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.listContent}
         renderItem={({ item }) => (
-          <View style={styles.card}>
-            <Text style={styles.cardTitle}>{item.titulo}</Text>
-            <Text>{item.descricao}</Text>
-          </View>
+          <TrilhaCard 
+            data={item} 
+            onPress={() => console.log(`Navegar para trilha ID: ${item.id}`)} 
+            onDelete={() => handleExcluirTrilha(item.id, item.titulo)}
+          />
         )}
       />
-    </View>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, paddingTop: 50, backgroundColor: '#f5f5f5' },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
-  card: { backgroundColor: '#fff', padding: 15, borderRadius: 8, marginBottom: 10, elevation: 2 },
-  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 5 }
+  container: { 
+    flex: 1, 
+    backgroundColor: THEME.background,
+  },
+  center: { 
+    flex: 1, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60, 
+    paddingBottom: 20,
+  },
+  title: { 
+    fontSize: 24, 
+    fontWeight: 'bold', 
+    color: THEME.textPrimary 
+  },
+  listContent: {
+    paddingHorizontal: 24,
+    paddingBottom: 40,
+  }
 });
