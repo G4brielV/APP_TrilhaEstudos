@@ -5,30 +5,28 @@ import { UpdateTrilhaDto } from './dto/update-trilha.dto';
 
 @Injectable()
 export class TrilhasService {
-  private readonly USUARIO_FIXO_ID = 1;
-
   constructor(private prisma: PrismaService) {}
 
-  async create(createTrilhaDto: CreateTrilhaDto) {
+  async create(usuarioId: number, createTrilhaDto: CreateTrilhaDto) {
     return this.prisma.trilha.create({
       data: {
         ...createTrilhaDto,
-        usuarioId: this.USUARIO_FIXO_ID,
+        usuarioId,
       },
     });
   }
 
-  async findAll(page: number, limit: number) {
+  async findAll(usuarioId: number, page: number, limit: number) {
     const skip = (page - 1) * limit;
 
     const [data, total] = await Promise.all([
       this.prisma.trilha.findMany({
-        where: { usuarioId: this.USUARIO_FIXO_ID },
+        where: { usuarioId },
         skip,
         take: limit,
         include: { _count: { select: { conteudos: true } } },
       }),
-      this.prisma.trilha.count({ where: { usuarioId: this.USUARIO_FIXO_ID } }),
+      this.prisma.trilha.count({ where: { usuarioId } }),
     ]);
 
     return {
@@ -42,9 +40,9 @@ export class TrilhasService {
     };
   }
 
-  async findOne(id: number) {
+  async findOne(usuarioId: number, id: number) {
     const trilha = await this.prisma.trilha.findFirst({
-      where: { id, usuarioId: this.USUARIO_FIXO_ID },
+      where: { id, usuarioId },
       include: { conteudos: true }, 
     });
 
@@ -52,16 +50,16 @@ export class TrilhasService {
     return trilha;
   }
 
-  async update(id: number, updateTrilhaDto: UpdateTrilhaDto) {
-    await this.findOne(id); 
+  async update(usuarioId: number, id: number, updateTrilhaDto: UpdateTrilhaDto) {
+    await this.findOne(usuarioId, id); 
     return this.prisma.trilha.update({
       where: { id },
       data: updateTrilhaDto,
     });
   }
 
-  async remove(id: number) {
-    await this.findOne(id);
+  async remove(usuarioId: number, id: number) {
+    await this.findOne(usuarioId, id);
     return this.prisma.trilha.delete({ where: { id } });
   }
 }

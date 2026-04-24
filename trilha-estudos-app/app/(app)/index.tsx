@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react';
-import { View, Text, FlatList, ActivityIndicator, StyleSheet, StatusBar, Alert } from 'react-native';
+import { View, Text, FlatList, ActivityIndicator, StyleSheet, StatusBar, Alert, TouchableOpacity } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { useRouter } from 'expo-router';
+import { Feather } from '@expo/vector-icons';
 import { TrilhasService } from '../../src/services/trilhas';
+import { AuthService } from '../../src/services/auth';
 import { Trilha } from '../../src/types/models';
 import { THEME } from '../../src/theme/colors';
 import { TrilhaCard } from '../../src/components/TrilhaCard';
@@ -17,6 +19,7 @@ export default function Home() {
   const [page, setPage] = useState(1);
   const [lastPage, setLastPage] = useState(1);
   const [refreshing, setRefreshing] = useState(false);
+  const [userName, setUserName] = useState('');
 
   // Modal state
   const [modalVisible, setModalVisible] = useState(false);
@@ -24,7 +27,13 @@ export default function Home() {
 
   useEffect(() => {
     carregarTrilhas();
+    loadUserInfo();
   }, []);
+
+  async function loadUserInfo() {
+    const user = await AuthService.getUser();
+    if (user) setUserName(user.nome);
+  }
 
   async function carregarTrilhas() {
     try {
@@ -32,7 +41,12 @@ export default function Home() {
       setTrilhas(response.data);
       setPage(1);
       setLastPage(response.meta.lastPage);
-    } catch (error) {
+    } catch (error: any) {
+      if (error.response?.status === 401) {
+        // Token inválido — voltar para login
+        router.replace('/(auth)/login' as any);
+        return;
+      }
       console.log("Falha na comunicação com a API");
     } finally {
       setLoading(false);
@@ -60,6 +74,24 @@ export default function Home() {
   function handleRefresh() {
     setRefreshing(true);
     carregarTrilhas();
+  }
+
+  async function handleLogout() {
+    Alert.alert(
+      "Sair",
+      "Tem certeza que deseja sair da sua conta?",
+      [
+        { text: "Cancelar", style: "cancel" },
+        {
+          text: "Sair",
+          style: "destructive",
+          onPress: async () => {
+            await AuthService.logout();
+            router.replace('/(auth)/login' as any);
+          },
+        },
+      ]
+    );
   }
 
   async function handleExcluirTrilha(id: number, titulo: string) {
@@ -136,9 +168,20 @@ export default function Home() {
     <GestureHandlerRootView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={THEME.background} />
       
+      {/* Header com saudação e logout */}
       <View style={styles.header}>
-        <Text style={styles.title}>Trilhas Disponíveis</Text>
-        <AddButton onPress={handleOpenCreate} />
+        <View>
+          {userName ? (
+            <Text style={styles.greeting}>Olá, {userName.split(' ')[0]}! 👋</Text>
+          ) : null}
+          <Text style={styles.title}>Minhas Trilhas</Text>
+        </View>
+        <View style={styles.headerActions}>
+          <AddButton onPress={handleOpenCreate} />
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout} activeOpacity={0.7}>
+            <Feather name="log-out" size={20} color={THEME.textSecondary} />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <FlatList
@@ -198,10 +241,28 @@ const styles = StyleSheet.create({
     paddingTop: 60, 
     paddingBottom: 20,
   },
+  greeting: {
+    fontSize: 14,
+    color: THEME.textSecondary,
+    marginBottom: 4,
+  },
   title: { 
     fontSize: 24, 
     fontWeight: 'bold', 
     color: THEME.textPrimary 
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  logoutButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   listContent: {
     paddingHorizontal: 24,

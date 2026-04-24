@@ -19,7 +19,7 @@ async function main() {
     create: {
       nome: 'admin',
       email: 'admin@admin.com',
-      senha: '123',
+      senha: '$2b$10$xC.oCwoOO6sP7JJ/dukd8OpbQjscmnrAgfeReD7swDf5GOS42HIbm', /* #123123 */
     },
   });
 
