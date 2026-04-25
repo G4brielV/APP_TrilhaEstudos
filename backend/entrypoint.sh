@@ -6,7 +6,8 @@ echo "⏳ Waiting for the database to be ready..."
 MAX_RETRIES=30
 RETRY_COUNT=0
 
-until npx prisma db execute --stdin <<< "SELECT 1" > /dev/null 2>&1; do
+# Correção aqui: usando 'echo' e '|' ao invés de '<<<'
+until echo "SELECT 1" | npx prisma db execute --stdin > /dev/null 2>&1; do
   RETRY_COUNT=$((RETRY_COUNT + 1))
   if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
     echo "❌ Database did not become ready in time. Exiting."
@@ -25,4 +26,8 @@ echo "🌱 Running database seed..."
 npx ts-node prisma/seed.ts
 
 echo "🚀 Starting the backend..."
-exec node dist/main
+if [ -f "dist/src/main.js" ]; then
+  exec node dist/src/main.js
+else
+  exec node dist/main.js
+fi

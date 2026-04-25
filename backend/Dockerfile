@@ -22,6 +22,9 @@ EXPOSE 3000
 
 # Entrypoint script handles migrations, seed and startup
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+
+# Instala o utilitário para converter as quebras de linha (CRLF para LF)
+RUN apk add --no-cache dos2unix
+RUN dos2unix /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
